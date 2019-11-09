@@ -27,6 +27,11 @@ Game.ItemMixins.Edible = {
         } else {
             return this._name;
         }
+    },
+    listeners: {
+        'details': function () {
+            return [{ key: 'food', value: this._foodValue }];
+        }
     }
 };
 
@@ -49,5 +54,10 @@ Game.ItemMixins.Equippable = {
     },
     isWearable: function () {
         return this._wearable;
+    },
+    listeners: {
+        'details': function () {
+            return [{ key: 'food', value: this._foodValue }];
+        }
     }
 };
