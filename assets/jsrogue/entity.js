@@ -112,7 +112,7 @@ Game.Entity.prototype.tryMove = function (x, y, z, map) {
             this.hasMixin(Game.EntityMixins.PlayerActor)) {
             // Switch the entity to a boss cavern!
             this.switchMap(new Game.Map.BossCavern());
-        } else if (tile != Game.Tile.stairsDownTile) {
+        } else if (tile !== Game.Tile.stairsDownTile) {
             Game.sendMessage(this, "You can't go down here!");
         } else {
             this.setPosition(x, y, z);

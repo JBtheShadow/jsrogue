@@ -1,11 +1,11 @@
-Game.Map = function (tiles) {
+Game.Map = function (width, height, depth, tiles) {
     this._tiles = tiles;
     // Cache dimensions
-    this._depth = tiles.length;
-    this._width = tiles[0].length;
-    this._height = tiles[0][0].length;
+    this._depth = depth;
+    this._width = width;
+    this._height = height;
     // Setup the field of visions
-    this._fov = [];
+    this._fov = {};
     this.setupFov();
     // Create a table which will hold the entities
     this._entities = {};
@@ -15,7 +15,7 @@ Game.Map = function (tiles) {
     this._scheduler = new ROT.Scheduler.Speed();
     this._engine = new ROT.Engine(this._scheduler);
     // Setup the explored array
-    this._explored = new Array(this._depth);
+    this._explored = {};
     this._setupExploredArray();
 };
 
@@ -58,10 +58,12 @@ Game.Map.prototype.addItemAtRandomPosition = function (item, z) {
 
 Game.Map.prototype._setupExploredArray = function () {
     for (var z = 0; z < this._depth; z++) {
-        this._explored[z] = new Array(this._width);
-        for (var x = 0; x < this._width; x++) {
-            this._explored[z][x] = new Array(this._height);
-            for (var y = 0; y < this._height; y++) {
+        this._explored[z] = {};
+        for (var y = 0; y < this._height; y++) {
+            for (var x = y % 2; x < this._width; x += 2) {
+                if (typeof this._explored[z][x] === "undefined") {
+                    this._explored[z][x] = {};
+                }
                 this._explored[z][x][y] = false;
             }
         }
@@ -95,10 +97,10 @@ Game.Map.prototype.setupFov = function () {
             // For each depth, we need to create a callback which figures out
             // if light can pass through a given tile.
             var depth = z;
-            map._fov.push(
-                new ROT.FOV.DiscreteShadowcasting(function (x, y) {
+            map._fov[depth] =
+                new ROT.FOV.PreciseShadowcasting(function (x, y) {
                     return !map.getTile(x, y, depth).isBlockingLight();
-                }, { topology: 8 }));
+                }, { topology: 6 });
         })();
     }
 };
@@ -112,20 +114,20 @@ Game.Map.prototype.getDepth = function () {
     return this._depth;
 };
 
-Game.Map.prototype.getWidth = function() {
+Game.Map.prototype.getWidth = function () {
     return this._width;
 };
 
-Game.Map.prototype.getHeight = function() {
+Game.Map.prototype.getHeight = function () {
     return this._height;
 };
 
-// Gets the tile for a given coordinate set
 Game.Map.prototype.getTile = function (x, y, z) {
     // Make sure we are inside the bounds. If we aren't, return
     // null tile.
     if (x < 0 || x >= this._width || y < 0 || y >= this._height ||
-        z < 0 || z >= this._depth) {
+        z < 0 || z >= this._depth ||
+        (x + y) % 2 !== 0) {
         return Game.Tile.nullTile;
     } else {
         return this._tiles[z][x][y] || Game.Tile.nullTile;
@@ -161,8 +163,8 @@ Game.Map.prototype.getEntityAt = function (x, y, z) {
 Game.Map.prototype.getEntitiesWithinRadius = function (centerX, centerY, centerZ, radius) {
     results = [];
     // Determine our bounds
-    var leftX = centerX - radius;
-    var rightX = centerX + radius;
+    var leftX = centerX - radius * 2;
+    var rightX = centerX + radius * 2;
     var topY = centerY - radius;
     var bottomY = centerY + radius;
     // Iterate through our entities, adding any which are within the bounds
@@ -224,6 +226,11 @@ Game.Map.prototype.getRandomFloorPosition = function (z) {
     do {
         x = Math.floor(Math.random() * this._width);
         y = Math.floor(Math.random() * this._height);
+        if ((x + y) % 2 !== 0) {
+            var offsets = ROT.DIRS[4][Math.floor(Math.random() * 4)];
+            x += offsets[0];
+            y += offsets[1];
+        }
     } while (!this.isEmptyFloor(x, y, z));
     return { x: x, y: y, z: z };
 };
