@@ -3,6 +3,7 @@ Game.Map.BossCavern = function () {
     Game.Map.call(this, 80, 24, 6, this._generateTiles(80, 24));
     // Create the giant zombie
     this.addEntityAtRandomPosition(Game.EntityRepository.create('giant zombie'), 0);
+    Game.playMusic("boss");
 };
 
 Game.Map.BossCavern.extend(Game.Map);

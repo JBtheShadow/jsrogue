@@ -3,12 +3,33 @@ Game.Screen.playScreen.enter = function () {
     var width = 100;
     var height = 48;
     var depth = 6;
+    Game.playMusic("cave");
     // Create our map from the tiles and player
     this._player = new Game.Entity(Game.PlayerTemplate);
     var tiles = new Game.Builder(width, height, depth).getTiles();
     var map = new Game.Map.Cave(width, height, depth, tiles, this._player);
     // Start the map's engine
     map.getEngine().start();
+};
+
+Game.playMusic = function (music) {
+    if (Game._audio) {
+        Game._audio.pause()
+    }
+    if (music) {
+        Game._audio = document.querySelector("[data-audio='" + music + "']");
+        if (Game._audio) {
+            Game._audio.loop = true;
+            Game._audio.play();
+        }
+    }
+};
+
+Game.Screen.playScreen.setGameEnded = function (gameEnded) {
+    if (gameEnded) {
+        Game.playMusic(null);
+    }
+    this._gameEnded = gameEnded;
 };
 
 Game.Screen.playScreen.getMovementDirection = function (keyCode) {
@@ -31,4 +52,14 @@ Game.Screen.playScreen.getMovementDirection = function (keyCode) {
 
     var diff = ROT.DIRS[6][keyMap[keyCode]];
     return [...diff, 0];
+};
+
+Game.Screen.winScreen.enter = function () {
+    Game.playMusic("win");
+    console.log("Entered win screen.");
+};
+
+Game.Screen.loseScreen.enter = function () {
+    Game.playMusic(null);
+    console.log("Entered lose screen.");
 };
